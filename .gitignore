@@ -1,0 +1,8 @@
+.sconsign.dblite
+Makefile
+generated
+*.os
+*.o
+*.pyd
+*.pyc
+
