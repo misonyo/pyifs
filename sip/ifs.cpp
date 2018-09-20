@@ -1,21 +1,22 @@
 #include "ifs.h"
-#include <fatfs/ff.h>
 #include <stdio.h>
 #include <string.h>
 
-ifs::ifs()
+ifs::ifs(const char* ldn)
 {
     FRESULT ret;
-    FATFS fs;     /* Ponter to the filesystem object */
 
-    ret = f_mount(&fs, "/d/misonyo/test/sd0.bin", 0);
+    drive_num = ldn;
+    fs_cb = malloc(sizeof (FATFS));
+
+    ret = f_mount(fs_cb, drive_num, 0);
     if (ret != FR_OK)
     {
-        printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
+        printf("mount failed!\n");
     }
     else
     {
-        printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
+        printf("mount succeed!\n");
     }
 
     printf("<==%s==>\n", __func__);
@@ -24,22 +25,25 @@ ifs::~ifs()
 {
     FRESULT ret;
 
-    ret = f_mount(0, "/d/misonyo/test/sd0.bin", 0);
+    ret = f_unmount(drive_num);
     if (ret != FR_OK)
     {
-        printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
+        printf("unmount failed!\n");
     }
     else
     {
-        printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
+        printf("unmount succeed!\n");
     }
+
+    free(fs_cb);
+
     printf("<==~%s==>\n", __func__);
 }
 
-void* ifs::open (const char *filename, const char *opentype)
+void* ifs::open(const char *filename, const char *opentype)
 {
-    static FIL fil = NULL;
     BYTE mode;
+    static FIL file_cb;
 
     if(strcmp("r",opentype) == 0)
     {
@@ -78,13 +82,13 @@ void* ifs::open (const char *filename, const char *opentype)
         printf("wrong open type!\n");
     }
 
-    f_open(&fil, filename, mode);
+    f_open(&file_cb, filename, mode);
 
     printf("<==%s==>\n", __func__);
 
-    return ((void*)&fil);
+    return ((void*)&file_cb);
 }
-int ifs::close (void* stream)
+int ifs::close(void* stream)
 {
     int ret;
 
@@ -94,21 +98,21 @@ int ifs::close (void* stream)
 
     return ret;
 }
-int ifs::read  (char* data, int size, void *stream)
+int ifs::read(void *stream,char* buff, int size, int* num)
 {
     int ret;
 
-    ret = f_close((FIL*)stream);
+    ret = f_read((FIL*)stream, (void*)buff, (UINT)size, (UINT*)num);
 
     printf("<==%s==>\n", __func__);
 
     return ret;
 }
-int ifs::write (const char *data, int size, void *stream)
+int ifs::write(void *stream,const char* buff, int size, int* num)
 {
     int ret;
 
-    ret = f_close((FIL*)stream);
+    ret = f_write((FIL*)stream, (const void*)buff, (UINT)size, (UINT*)num);
 
     printf("<==%s==>\n", __func__);
 
@@ -116,19 +120,30 @@ int ifs::write (const char *data, int size, void *stream)
 }
 int ifs::flush (void *stream)
 {
-    int ret;
-
-    ret = f_close((FIL*)stream);
 
     printf("<==%s==>\n", __func__);
 
-    return ret;
+    return 0;
 }
 int ifs::seek (void *stream, int offset, int whence)
 {
     int ret;
+    int ofs;
 
-    ret = f_close((FIL*)stream);
+    if(0 == whence)
+    {
+        ofs = offset;
+    }
+    else if(1 == whence)
+    {
+
+        ofs = offset + f_tell((FIL*)stream);
+    }
+    else
+    {
+        ofs = f_size((FIL*)stream) + offset;
+    }
+    ret = f_lseek((FIL*)stream, ofs);
 
     printf("<==%s==>\n", __func__);
 
@@ -138,7 +153,7 @@ int ifs::tell (void *stream)
 {
     int ret;
 
-    ret = f_close((FIL*)stream);
+    ret = f_tell((FIL*)stream);
 
     printf("<==%s==>\n", __func__);
 

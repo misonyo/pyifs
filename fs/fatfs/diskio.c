@@ -3,25 +3,13 @@
 #include <time.h>
 #include "diskio.h"
 
-char* name_cat(BYTE pdrv)
-{
-    char num[2];
-    char dev_name[10] = "sd";
-    char dir[16] = "/d/misonyo/test/";
-
-    itoa(pdrv, num, 10);
-    strcat(dev_name,num);
-    strcat(dev_name,".bin");
-    strcat(dir, dev_name);
-
-    return dir;
-}
-
 DSTATUS disk_initialize (BYTE pdrv)
 {
     DRESULT ret = RES_OK;
     FILE *fp = NULL;
-    char dir = name_cat(pdrv);
+    char dir[10];
+
+    snprintf(dir, 10,"sd%d.bin", pdrv);
 
     do{
         fp = fopen(dir, "ab+");
@@ -42,7 +30,9 @@ DSTATUS disk_status (BYTE pdrv)
 {
     DRESULT ret = RES_OK;
     FILE *fp = NULL;
-    char dir = name_cat(pdrv);
+    char dir[10];
+
+    snprintf(dir, 10,"sd%d.bin", pdrv);
 
     fp = fopen(dir, "rb");
     if(!fp)
@@ -60,7 +50,9 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
 {
     DRESULT ret = RES_OK;
     FILE *fp = NULL;
-    char dir = name_cat(pdrv);
+    char dir[10];
+
+    snprintf(dir, 10,"sd%d.bin", pdrv);
 
     do{
         fp = fopen(dir, "rb+");
@@ -82,7 +74,9 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 {
     DRESULT ret = RES_OK;
     FILE *fp = NULL;
-    char dir = name_cat(pdrv);
+    char dir[10];
+
+    snprintf(dir, 10,"sd%d.bin", pdrv);
 
     do{
         fp = fopen(dir, "rb+");
