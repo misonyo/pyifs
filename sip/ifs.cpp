@@ -7,16 +7,18 @@ ifs::ifs(const char* ldn)
     FRESULT ret;
 
     drive_num = ldn;
-    fs_cb = malloc(sizeof (FATFS));
+    fs_cb = (FATFS*)malloc(sizeof (FATFS));
 
     ret = f_mount(fs_cb, drive_num, 0);
     if (ret != FR_OK)
     {
         printf("mount failed!\n");
+        printf("return value of f_mount is:%d\n",ret);
     }
     else
     {
         printf("mount succeed!\n");
+        printf("return value of f_mount is:%d\n",ret);
     }
 
     printf("<==%s==>\n", __func__);
@@ -37,7 +39,7 @@ ifs::~ifs()
 
     free(fs_cb);
 
-    printf("<==~%s==>\n", __func__);
+    printf("<==%s==>\n", __func__);
 }
 
 void* ifs::open(const char *filename, const char *opentype)
@@ -159,3 +161,4 @@ int ifs::tell (void *stream)
 
     return ret;
 }
+

@@ -16,6 +16,7 @@ DSTATUS disk_initialize (BYTE pdrv)
         if(!fp)
         {
             ret = RES_ERROR;
+            printf("%s fopen failed!",__func__);
             break;
         }
 

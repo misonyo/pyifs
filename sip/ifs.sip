@@ -11,16 +11,15 @@ class ifs {
 %End
 
 public:
-    /* operations for file */
-    void* open (const char *filename, const char *opentype);
-    int close (void* stream);
-    int read(void *stream,char* buff, int size, int* num);
-    int write(void *stream,const char* buff, int size, int* num);
-    int flush (void *stream);
-    int seek (void *stream, int offset, int whence);
-    int tell  (void *stream);
-    
-private:
-    const char* drive_num;
-    FATFS* fs_cb;
+    explicit ifs(const char* ldn);
+    ~ifs();
+
+    void* open(const char *filename, const char *opentype);
+    int close(void* stream);
+    int read(void *stream,char* buff /Out/, int size, int* num /Out/);
+    int write(void *stream,const char* buff, int size, int* num /Out/);
+    int flush(void *stream);
+    int seek(void *stream, int offset, int whence);
+    int tell(void *stream);
+
 };
