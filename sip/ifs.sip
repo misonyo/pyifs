@@ -16,8 +16,8 @@ public:
 
     void* open(const char *filename, const char *opentype);
     int close(void* stream);
-    int read(void *stream,char* buff /Out/, int size, int* num /Out/);
-    int write(void *stream,const char* buff, int size, int* num /Out/);
+    int read(void *stream,char** buff /Out/, int size);
+    int write(void *stream,const char* buff, int size);
     int flush(void *stream);
     int seek(void *stream, int offset, int whence);
     int tell(void *stream);

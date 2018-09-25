@@ -5,95 +5,79 @@
 
 DSTATUS disk_initialize (BYTE pdrv)
 {
-    DRESULT ret = RES_OK;
     FILE *fp = NULL;
     char dir[10];
+    printf("<===%s===>\n", __func__);
 
     snprintf(dir, 10,"sd%d.bin", pdrv);
 
-    do{
-        fp = fopen(dir, "ab+");
-        if(!fp)
-        {
-            ret = RES_ERROR;
-            printf("%s fopen failed!",__func__);
-            break;
-        }
+    fp = fopen(dir, "ab+");
+    if(!fp)
+    {
+        printf("%s fopen failed!",__func__);
+        return RES_ERROR;
+    }
 
-        fclose(fp);
-    }while(0);
+    fclose(fp);
 
-    printf("this is :%s\n", __func__);
-
-    return ret;
+    return RES_OK;
 }
 DSTATUS disk_status (BYTE pdrv)
 {
-    DRESULT ret = RES_OK;
     FILE *fp = NULL;
     char dir[10];
+    printf("<===%s===>\n", __func__);
 
     snprintf(dir, 10,"sd%d.bin", pdrv);
 
     fp = fopen(dir, "rb");
     if(!fp)
     {
-        ret = STA_NODISK;
+        return STA_NODISK;
     }
 
     fclose(fp);
 
-    printf("this is :%s\n", __func__);
-
-    return ret;
+    return RES_OK;
 }
 DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
 {
-    DRESULT ret = RES_OK;
     FILE *fp = NULL;
     char dir[10];
+    printf("<===%s===>\n", __func__);
 
     snprintf(dir, 10,"sd%d.bin", pdrv);
 
-    do{
-        fp = fopen(dir, "rb+");
-        if(!fp)
-        {
-            ret = RES_NOTRDY;
-            break;
-        }
-        fseek(fp,512 * sector,SEEK_SET);
-        fread(buff,sizeof(char),512 * count,fp);
-        fclose(fp);
-    }while(0);
+    fp = fopen(dir, "rb+");
+    if(!fp)
+    {
+        return RES_NOTRDY;
+    }
+    fseek(fp,512 * sector,SEEK_SET);
+    fread(buff,sizeof(char),512 * count,fp);
+    fclose(fp);
 
-    printf("this is :%s\n", __func__);
-
-    return ret;
+    return RES_OK;
 }
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 {
-    DRESULT ret = RES_OK;
     FILE *fp = NULL;
     char dir[10];
+    printf("<===%s===>\n", __func__);
 
     snprintf(dir, 10,"sd%d.bin", pdrv);
 
-    do{
-        fp = fopen(dir, "rb+");
-        if(!fp)
-        {
-            ret = RES_NOTRDY;
-            break;
-        }
-        fseek(fp,512 * sector,SEEK_SET);
-        fwrite(buff,sizeof(char),512 * count,fp);
-        fclose(fp);
-    }while(0);
+    fp = fopen(dir, "rb+");
+    if(!fp)
+    {
+        return RES_NOTRDY;
+    }
+    fseek(fp,512 * sector,SEEK_SET);
+    fwrite(buff,sizeof(char),512 * count,fp);
+    fclose(fp);
 
-    printf("this is :%s\n", __func__);
 
-    return ret;
+    return RES_OK;
 }
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {

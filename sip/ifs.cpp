@@ -1,124 +1,142 @@
 #include "ifs.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 ifs::ifs(const char* ldn)
 {
     FRESULT ret;
+    printf("<===%s===>\n", __func__);
 
     drive_num = ldn;
-    fs_cb = (FATFS*)malloc(sizeof (FATFS));
 
-    ret = f_mount(fs_cb, drive_num, 0);
-    if (ret != FR_OK)
+    fs_cb = (FATFS*)malloc(sizeof (FATFS));
+    if(fs_cb == NULL)
     {
-        printf("mount failed!\n");
-        printf("return value of f_mount is:%d\n",ret);
+        printf("ifs malloc failed!\n");
     }
     else
     {
-        printf("mount succeed!\n");
-        printf("return value of f_mount is:%d\n",ret);
+        ret = f_mount(fs_cb, drive_num, 0);
+        if (ret != FR_OK)
+        {
+            printf("mount %s failed!\n",drive_num);
+            printf("return value of f_mount is:%d\n",ret);
+            free(fs_cb);
+        }
+        else
+        {
+            printf("mount %s succeed!\n",drive_num);
+            printf("return value of f_mount is:%d\n",ret);
+        }
     }
-
-    printf("<==%s==>\n", __func__);
 }
 ifs::~ifs()
 {
     FRESULT ret;
+    printf("<===%s===>\n", __func__);
 
     ret = f_unmount(drive_num);
     if (ret != FR_OK)
     {
-        printf("unmount failed!\n");
+        printf("unmount %s failed!\n",drive_num);
     }
     else
     {
-        printf("unmount succeed!\n");
+        printf("unmount %s succeed!\n",drive_num);
     }
 
     free(fs_cb);
-
-    printf("<==%s==>\n", __func__);
 }
 
 void* ifs::open(const char *filename, const char *opentype)
 {
-    BYTE mode;
-    static FIL file_cb;
+    FIL* file_cb;
+    FRESULT ret;
+    BYTE open_flag;
+    printf("<===%s===>\n", __func__);
 
-    if(strcmp("r",opentype) == 0)
+    for(open_flag = 0;(*opentype) != '\0';opentype ++)
     {
-        mode = FA_READ;
-    }
-    else if(strcmp("r+",opentype) == 0)
-    {
-        mode = FA_READ | FA_WRITE;
-    }
-    else if(strcmp("w",opentype) == 0)
-    {
-        mode = FA_CREATE_ALWAYS | FA_WRITE;
-    }
-    else if(strcmp("w+",opentype) == 0)
-    {
-        mode = FA_CREATE_ALWAYS | FA_WRITE | FA_READ;
-    }
-    else if(strcmp("a",opentype) == 0)
-    {
-        mode = FA_OPEN_APPEND | FA_WRITE;
-    }
-    else if(strcmp("a+",opentype) == 0)
-    {
-        mode = FA_OPEN_APPEND | FA_WRITE | FA_READ;
-    }
-    else if(strcmp("wx",opentype) == 0)
-    {
-        mode = FA_CREATE_NEW | FA_WRITE;
-    }
-    else if(strcmp("w+x",opentype) == 0)
-    {
-        mode =  FA_CREATE_NEW | FA_WRITE | FA_READ;
-    }
-    else
-    {
-        printf("wrong open type!\n");
+        if('r' == (*opentype))
+        {
+            open_flag |= FA_READ;
+        }
+        else if('w' == (*opentype))
+        {
+            open_flag |= (FA_CREATE_ALWAYS | FA_WRITE);
+        }
+        else if('a' == (*opentype))
+        {
+            open_flag |= (FA_OPEN_APPEND | FA_WRITE);
+        }
+        else if('x' == (*opentype))
+        {
+            open_flag |= FA_CREATE_NEW;
+            open_flag &= ~FA_CREATE_ALWAYS;
+        }
+        else if('+' == (*opentype))
+        {
+            open_flag |= (FA_READ | FA_WRITE);
+        }
+        else
+        {
+            printf("wrong open type!\n");
+            return NULL;
+        }
     }
 
-    f_open(&file_cb, filename, mode);
+    file_cb = (FIL*)malloc(sizeof (FIL));
+    if(file_cb == NULL)
+    {
+        return NULL;
+    }
+    ret = f_open(file_cb, filename, open_flag);
+    if(ret)
+    {
+        printf("f_open %s failed!\n",filename);
+        free(file_cb);
+        return NULL;
+    }
 
-    printf("<==%s==>\n", __func__);
-
-    return ((void*)&file_cb);
+    return ((void*)file_cb);
 }
 int ifs::close(void* stream)
 {
-    int ret;
+    FRESULT ret;
+    printf("<===%s===>\n", __func__);
 
     ret = f_close((FIL*)stream);
 
-    printf("<==%s==>\n", __func__);
-
     return ret;
 }
-int ifs::read(void *stream,char* buff, int size, int* num)
+int ifs::read(void *stream,char** buff, int size)
 {
-    int ret;
+    FRESULT ret;
+    int num = -1;
+    printf("<===%s===>\n", __func__);
 
-    ret = f_read((FIL*)stream, (void*)buff, (UINT)size, (UINT*)num);
+    *buff = (char*)malloc(size);
+    ret = f_read((FIL*)stream, (void*)buff, (UINT)size, (UINT*)&num);
+    if(ret)
+    {
+        printf("f_read failed,return value is:%d!\n",ret);
+    }
 
-    printf("<==%s==>\n", __func__);
-
-    return ret;
+    return num;
 }
-int ifs::write(void *stream,const char* buff, int size, int* num)
+int ifs::write(void *stream,const char* buff, int size)
 {
-    int ret;
+    FRESULT ret;
+    int num = -1;
+    printf("<===%s===>\n", __func__);
 
-    ret = f_write((FIL*)stream, (const void*)buff, (UINT)size, (UINT*)num);
-
-    printf("<==%s==>\n", __func__);
-
-    return ret;
+    ret = f_write((FIL*)stream, (const void*)buff, (UINT)size, (UINT*)&num);
+    if(ret)
+    {
+        printf("f_write failed,return value is:%d!\n",ret);
+    }
+    return num;
 }
 int ifs::flush (void *stream)
 {
@@ -129,36 +147,36 @@ int ifs::flush (void *stream)
 }
 int ifs::seek (void *stream, int offset, int whence)
 {
-    int ret;
+    FRESULT ret;
     int ofs;
+    printf("<===%s===>\n", __func__);
 
     if(0 == whence)
     {
         ofs = offset;
     }
-    else if(1 == whence)
+    else if((1 == whence) && (offset >= 0))
     {
 
-        ofs = offset + f_tell((FIL*)stream);
+        ofs = f_tell((FIL*)stream) + offset;
     }
-    else
+    else if((2 == whence) && (offset < 0))
     {
         ofs = f_size((FIL*)stream) + offset;
     }
+    else
+    {
+        printf("wrong whence or offset!\n");
+        return FR_INVALID_PARAMETER;
+    }
     ret = f_lseek((FIL*)stream, ofs);
-
-    printf("<==%s==>\n", __func__);
 
     return ret;
 }
 int ifs::tell (void *stream)
 {
-    int ret;
+    printf("<===%s===>\n", __func__);
 
-    ret = f_tell((FIL*)stream);
-
-    printf("<==%s==>\n", __func__);
-
-    return ret;
+    return f_tell((FIL*)stream);
 }
 
