@@ -117,12 +117,13 @@ int ifs::read(void *stream,char** buff, int size)
     printf("<===%s===>\n", __func__);
 
     *buff = (char*)malloc(size);
-    ret = f_read((FIL*)stream, (void*)buff, (UINT)size, (UINT*)&num);
+    ret = f_read((FIL*)stream, (void*)*buff, (UINT)size, (UINT*)&num);
     if(ret)
     {
         printf("f_read failed,return value is:%d!\n",ret);
     }
 
+    printf("<===%s %d===>\n", __func__, num);
     return num;
 }
 int ifs::write(void *stream,const char* buff, int size)

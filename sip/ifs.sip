@@ -17,6 +17,10 @@ public:
     void* open(const char *filename, const char *opentype);
     int close(void* stream);
     int read(void *stream,char** buff /Out/, int size);
+    %MethodCode
+        sipRes = sipCpp->read(a0,&a1,a2);
+        return sipBuildResult(0,"(ig)",sipRes,a1,sipRes);
+    %End
     int write(void *stream,const char* buff, int size);
     int flush(void *stream);
     int seek(void *stream, int offset, int whence);
