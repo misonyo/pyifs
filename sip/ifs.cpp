@@ -20,14 +20,12 @@ ifs::ifs(const char* ldn)
         ret = f_mount(fs_cb, drive_num, 0);
         if (ret != FR_OK)
         {
-            printf("mount %s failed!\n",drive_num);
-            printf("return value of f_mount is:%d\n",ret);
+            printf("mount %s failed,return value is:%d!\n",drive_num,ret);
             free(fs_cb);
         }
         else
         {
             printf("mount %s succeed!\n",drive_num);
-            printf("return value of f_mount is:%d\n",ret);
         }
     }
 }
@@ -39,7 +37,7 @@ ifs::~ifs()
     ret = f_unmount(drive_num);
     if (ret != FR_OK)
     {
-        printf("unmount %s failed!\n",drive_num);
+        printf("unmount %s failed,return value is:%d!\n",drive_num,ret);
     }
     else
     {
@@ -94,7 +92,7 @@ void* ifs::open(const char *filename, const char *opentype)
     ret = f_open(file_cb, filename, open_flag);
     if(ret)
     {
-        printf("f_open %s failed!\n",filename);
+        printf("f_open %s failed,return value is %d!\n",filename,ret);
         free(file_cb);
         return NULL;
     }
