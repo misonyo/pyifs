@@ -17,6 +17,10 @@ public:
     int flush(void *stream);
     int seek(void *stream, int offset, int whence);
     int tell(void *stream);
+    int mkdir(const char *dirname);
+    int rmdir(const char *dirname);
+    int readdir(const char *dirname);
+    int rm(const char *old_name,const char *new_name);
 
 private:
     const char* drive_num;

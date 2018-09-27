@@ -105,9 +105,15 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
     case GET_SECTOR_SIZE:
         * buff = (WORD)512;
         break;
+    case GET_BLOCK_SIZE:
+        * buff = (DWORD)512;
+        break;
 
     }
-    return 0;
+
+    fclose(fp);
+
+    return RES_OK;
 }
 
 DWORD get_fattime (void)

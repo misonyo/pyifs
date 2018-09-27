@@ -5,7 +5,7 @@
 
 ifs::ifs(const char* ldn)
 {
-    FRESULT ret;
+    FRESULT res;
     printf("<===%s===>\n", __func__);
 
     drive_num = ldn;
@@ -17,10 +17,10 @@ ifs::ifs(const char* ldn)
     }
     else
     {
-        ret = f_mount(fs_cb, drive_num, 0);
-        if (ret != FR_OK)
+        res = f_mount(fs_cb, drive_num, 0);
+        if (res != FR_OK)
         {
-            printf("mount %s failed,return value is:%d!\n",drive_num,ret);
+            printf("mount %s failed,return value is:%d!\n",drive_num,res);
             free(fs_cb);
         }
         else
@@ -31,13 +31,13 @@ ifs::ifs(const char* ldn)
 }
 ifs::~ifs()
 {
-    FRESULT ret;
+    FRESULT res;
     printf("<===%s===>\n", __func__);
 
-    ret = f_unmount(drive_num);
-    if (ret != FR_OK)
+    res = f_unmount(drive_num);
+    if (res != FR_OK)
     {
-        printf("unmount %s failed,return value is:%d!\n",drive_num,ret);
+        printf("unmount %s failed,return value is:%d!\n",drive_num,res);
     }
     else
     {
@@ -50,7 +50,7 @@ ifs::~ifs()
 void* ifs::open(const char *filename, const char *opentype)
 {
     FIL* file_cb;
-    FRESULT ret;
+    FRESULT res;
     BYTE open_flag;
     printf("<===%s===>\n", __func__);
 
@@ -89,10 +89,10 @@ void* ifs::open(const char *filename, const char *opentype)
     {
         return NULL;
     }
-    ret = f_open(file_cb, filename, open_flag);
-    if(ret)
+    res = f_open(file_cb, filename, open_flag);
+    if(res)
     {
-        printf("f_open %s failed,return value is %d!\n",filename,ret);
+        printf("f_open %s failed,return value is %d!\n",filename,res);
         free(file_cb);
         return NULL;
     }
@@ -101,24 +101,24 @@ void* ifs::open(const char *filename, const char *opentype)
 }
 int ifs::close(void* stream)
 {
-    FRESULT ret;
+    FRESULT res;
     printf("<===%s===>\n", __func__);
 
-    ret = f_close((FIL*)stream);
+    res = f_close((FIL*)stream);
 
-    return ret;
+    return res;
 }
 int ifs::read(void *stream,char** buff, int size)
 {
-    FRESULT ret;
+    FRESULT res;
     int num = -1;
     printf("<===%s===>\n", __func__);
 
     *buff = (char*)malloc(size);
-    ret = f_read((FIL*)stream, (void*)*buff, (UINT)size, (UINT*)&num);
-    if(ret)
+    res = f_read((FIL*)stream, (void*)*buff, (UINT)size, (UINT*)&num);
+    if(res)
     {
-        printf("f_read failed,return value is:%d!\n",ret);
+        printf("f_read failed,return value is:%d!\n",res);
     }
 
     printf("<===%s %d===>\n", __func__, num);
@@ -126,14 +126,14 @@ int ifs::read(void *stream,char** buff, int size)
 }
 int ifs::write(void *stream,const char* buff, int size)
 {
-    FRESULT ret;
+    FRESULT res;
     int num = -1;
     printf("<===%s===>\n", __func__);
 
-    ret = f_write((FIL*)stream, (const void*)buff, (UINT)size, (UINT*)&num);
-    if(ret)
+    res = f_write((FIL*)stream, (const void*)buff, (UINT)size, (UINT*)&num);
+    if(res)
     {
-        printf("f_write failed,return value is:%d!\n",ret);
+        printf("f_write failed,return value is:%d!\n",res);
     }
     return num;
 }
@@ -146,7 +146,7 @@ int ifs::flush (void *stream)
 }
 int ifs::seek (void *stream, int offset, int whence)
 {
-    FRESULT ret;
+    FRESULT res;
     int ofs;
     printf("<===%s===>\n", __func__);
 
@@ -168,9 +168,9 @@ int ifs::seek (void *stream, int offset, int whence)
         printf("wrong whence or offset!\n");
         return FR_INVALID_PARAMETER;
     }
-    ret = f_lseek((FIL*)stream, ofs);
+    res = f_lseek((FIL*)stream, ofs);
 
-    return ret;
+    return res;
 }
 int ifs::tell (void *stream)
 {
@@ -178,4 +178,62 @@ int ifs::tell (void *stream)
 
     return f_tell((FIL*)stream);
 }
+int ifs::mkdir(const char *dirname)
+{
+    printf("<===%s===>\n", __func__);
 
+    return f_mkdir(dirname);
+}
+
+int ifs::rmdir(const char *dirname)
+{
+    printf("<===%s===>\n", __func__);
+
+    return f_unlink (dirname);
+}
+
+int ifs::readdir(const char *dirname)
+{
+    FRESULT res;
+    DIR dir;
+    UINT i;
+    static FILINFO fno;
+    printf("<===%s===>\n", __func__);
+
+    res = f_opendir(&dir, dirname);
+    if (res)
+    {
+        printf("f_opendir failed,return value is:%d!\n",res);
+        return res;
+    }
+
+    while(1)
+    {
+        res = f_readdir(&dir, &fno);
+        if (res != FR_OK || fno.fname[0] == 0)
+        {
+            break;
+        }
+       else
+        {
+           printf("%s\n",fno.fname);
+        }
+    }
+
+    f_closedir(&dir);
+
+    return res;
+}
+
+int ifs::rm(const char *old_name,const char *new_name)
+{
+    FRESULT res;
+    printf("<===%s===>\n", __func__);
+
+    res = f_rename(old_name,new_name);
+    if (res)
+    {
+        printf("f_rename failed,return value is:%d!\n",res);
+    }
+    return res;
+}
