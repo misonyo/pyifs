@@ -86,6 +86,7 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {
     FILE *fp = NULL;
     char dir[10];
+    DRESULT res;
     printf("<===%s===>\n", __func__);
 
     snprintf(dir, 10,"sd%d.bin", pdrv);
@@ -100,20 +101,28 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
     switch(cmd)
     {
     case GET_SECTOR_COUNT:
-        * buff = (DWORD)floor((fseek(fp, 0, SEEK_END) - ftell(fp)) / 512);
+        * (DWORD*)buff = floor((fseek(fp, 0, SEEK_END) - ftell(fp)) / 512);
         break;
     case GET_SECTOR_SIZE:
-        * buff = (WORD)512;
+        * (WORD*)buff = 512;
         break;
     case GET_BLOCK_SIZE:
-        * buff = (DWORD)512;
+        * (DWORD*)buff = 512;
         break;
-
+    case CTRL_SYNC:
+        res = RES_OK;
+        break;
+    case CTRL_TRIM:
+        res = RES_OK;
+        break;
+    default:
+        res = RES_OK;
+        break;
     }
 
     fclose(fp);
 
-    return RES_OK;
+    return res;
 }
 
 DWORD get_fattime (void)
