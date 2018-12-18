@@ -19,7 +19,8 @@ public:
     int tell(void *stream);
     int mkdir(const char *dirname);
     int rmdir(const char *dirname);
-    int readdir(const char *dirname);
+    void* opendir(const char *dirname);
+    int readdir(void *dir_cb,char** entry_name);
     int rm(const char *old_name,const char *new_name);
 
 private:

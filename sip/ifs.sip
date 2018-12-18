@@ -19,11 +19,26 @@ public:
     int read(void *stream,char** buff /Out/, int size);
     %MethodCode
         sipRes = sipCpp->read(a0,&a1,a2);
-        return sipBuildResult(0,"(ig)",sipRes,a1,sipRes);
+        PyObject * obj = sipBuildResult(0,"(ig)",sipRes,a1,sipRes);
+        free(a1);
+        return obj;
     %End
     int write(void *stream,const char* buff, int size);
     int flush(void *stream);
     int seek(void *stream, int offset, int whence);
     int tell(void *stream);
+    int mkdir(const char *dirname);
+    int rmdir(const char *dirname);
+    void* opendir(const char *dirname);
+    int readdir(void *dir_cb,char** entry_name /out/);
+    %MethodCode
+        sipRes = sipCpp->readdir(a0,&a1);
+    
+        PyObject * obj = sipBuildResult(0,"(ig)",sipRes,a1, strlen(a1));
+        free(a1);
+        return obj;
+    %End
+    int rm(const char *old_name,const char *new_name);
+    
 
 };

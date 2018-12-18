@@ -192,35 +192,41 @@ int ifs::rmdir(const char *dirname)
     return f_unlink (dirname);
 }
 
-int ifs::readdir(const char *dirname)
+void* ifs::opendir(const char *dirname)
 {
     FRESULT res;
-    DIR dir;
-    UINT i;
-    static FILINFO fno;
-    printf("<===%s===>\n", __func__);
+    DIR* dir_cb;
 
-    res = f_opendir(&dir, dirname);
+    printf("<===%s===>\n", __func__);
+    dir_cb = (DIR*)malloc(sizeof (DIR));
+    res = f_opendir(dir_cb, dirname);
     if (res)
     {
         printf("f_opendir failed,return value is:%d!\n",res);
+        free(dir_cb);
+        return NULL;
+    }
+
+    return dir_cb;
+}
+
+int ifs::readdir(void *dir_cb,char** entry_name)
+{
+    FRESULT res;
+    FILINFO fno;
+    printf("<===%s===>\n", __func__);
+
+    res = f_readdir((DIR*)dir_cb, &fno);
+    if ((res != FR_OK) || (fno.fname[0] == 0))
+    {
+        *entry_name = NULL;
         return res;
     }
-
-    while(1)
+   else
     {
-        res = f_readdir(&dir, &fno);
-        if (res != FR_OK || fno.fname[0] == 0)
-        {
-            break;
-        }
-       else
-        {
-           printf("%s\n",fno.fname);
-        }
+       *entry_name = (char*)malloc(strlen(fno.fname) + 1);
+       strcpy(*entry_name,fno.fname);
     }
-
-    f_closedir(&dir);
 
     return res;
 }

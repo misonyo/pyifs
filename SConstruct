@@ -17,4 +17,4 @@ env.Append(CPPDEFINES=['_hypot=hypot'])
 env.Append(LIBS=['python36'])
 env.Append(LIBPATH=['/c/Anaconda3/libs'])
 
-env.SharedLibrary('ifs.pyd', objs)
+env.SharedLibrary('py/ifs.pyd', objs)
