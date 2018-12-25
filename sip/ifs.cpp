@@ -231,7 +231,7 @@ int ifs::readdir(void *dir_cb,char** entry_name)
     return res;
 }
 
-int ifs::rm(const char *old_name,const char *new_name)
+int ifs::rename(const char *old_name,const char *new_name)
 {
     FRESULT res;
     printf("<===%s===>\n", __func__);

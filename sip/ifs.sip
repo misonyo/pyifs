@@ -38,7 +38,7 @@ public:
         free(a1);
         return obj;
     %End
-    int rm(const char *old_name,const char *new_name);
+    int rename(const char *old_name,const char *new_name);
     
 
 };

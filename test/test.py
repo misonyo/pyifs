@@ -1,6 +1,6 @@
-import ifs
+import pyifs
 
-device = ifs.ifs("0:".encode("utf-8"))
+device = pyifs.pyifs("1:")
 
 #file1 = device.open("hello.txt".encode("utf-8"),"r+".encode("utf-8"))
 
@@ -9,8 +9,10 @@ device = ifs.ifs("0:".encode("utf-8"))
 #print("xxxx")
 #print("result is :",result)
 
-dir1 = device.opendir("/".encode("utf-8"))
+dir1 = device.opendir("1:/")
 print("dir1 :",dir1)
 res = device.readdir(dir1)
 
 print("readdir:",res)
+
+print(device.ls("1:/"))

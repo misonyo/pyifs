@@ -21,7 +21,7 @@ public:
     int rmdir(const char *dirname);
     void* opendir(const char *dirname);
     int readdir(void *dir_cb,char** entry_name);
-    int rm(const char *old_name,const char *new_name);
+    int rename(const char *old_name,const char *new_name);
 
 private:
     const char* drive_num;

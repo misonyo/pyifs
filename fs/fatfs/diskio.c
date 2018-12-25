@@ -15,7 +15,7 @@ DSTATUS disk_initialize (BYTE pdrv)
     fp = fopen(dir, "rb+");
     if(!fp)
     {
-        printf("%s fopen failed!",__func__);
+        printf("%s fopen failed!\n",__func__);
         return RES_ERROR;
     }
 
