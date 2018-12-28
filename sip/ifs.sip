@@ -1,6 +1,6 @@
 /* Define the SIP wrapper to the ifs library. 
- * python version 3 -- sip 4.17  
- * python version 2 -- sip 4.16.4 */  
+ * http://ftp.ics.uci.edu/pub/centos0/ics-custom-build/BUILD/sip-4.10/doc/html/c_api.html
+ */  
 
 %Module ifs
 
@@ -30,12 +30,20 @@ public:
     int mkdir(const char *dirname);
     int rmdir(const char *dirname);
     void* opendir(const char *dirname);
-    int readdir(void *dir_cb,char** entry_name /out/);
+    int readdir(void *dir_cb,char** entry_name /Out/,int* size /Out/,int* type /Out/);
     %MethodCode
-        sipRes = sipCpp->readdir(a0,&a1);
-    
-        PyObject * obj = sipBuildResult(0,"(ig)",sipRes,a1, strlen(a1));
-        free(a1);
+        SIP_SSIZE_T length = 0;
+        sipRes = sipCpp->readdir(a0,&a1,&a2,&a3);
+
+        if (a1 != NULL)
+        {
+            length = strlen(a1);
+        }
+        PyObject * obj = sipBuildResult(0,"(igii)",sipRes, a1, length, a2, a3);
+        if (a1 != NULL)
+        {
+            free(a1);
+        }
         return obj;
     %End
     int rename(const char *old_name,const char *new_name);

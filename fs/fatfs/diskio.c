@@ -9,6 +9,7 @@ DSTATUS disk_initialize (BYTE pdrv)
     FILE *fp = NULL;
     char dir[10];
     printf("<===%s===>\n", __func__);
+    printf(">>>>>pdrv:%d\n",pdrv);
 
     snprintf(dir, 10,"sd%d.bin", pdrv);
 

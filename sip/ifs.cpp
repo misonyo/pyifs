@@ -9,7 +9,7 @@ ifs::ifs(const char* ldn)
     printf("<===%s===>\n", __func__);
 
     drive_num = ldn;
-
+    printf(">>>>>>>[ldn]%s\n",ldn);
     fs_cb = (FATFS*)malloc(sizeof (FATFS));
     if(fs_cb == NULL)
     {
@@ -111,7 +111,7 @@ int ifs::close(void* stream)
 int ifs::read(void *stream,char** buff, int size)
 {
     FRESULT res;
-    int num = -1;
+    int num = 0;
     printf("<===%s===>\n", __func__);
 
     *buff = (char*)malloc(size);
@@ -119,6 +119,7 @@ int ifs::read(void *stream,char** buff, int size)
     if(res)
     {
         printf("f_read failed,return value is:%d!\n",res);
+        num = 0;
     }
 
     printf("<===%s %d===>\n", __func__, num);
@@ -127,13 +128,14 @@ int ifs::read(void *stream,char** buff, int size)
 int ifs::write(void *stream,const char* buff, int size)
 {
     FRESULT res;
-    int num = -1;
+    int num = 0;
     printf("<===%s===>\n", __func__);
 
     res = f_write((FIL*)stream, (const void*)buff, (UINT)size, (UINT*)&num);
     if(res)
     {
         printf("f_write failed,return value is:%d!\n",res);
+        num = 0;
     }
     return num;
 }
@@ -189,7 +191,7 @@ int ifs::rmdir(const char *dirname)
 {
     printf("<===%s===>\n", __func__);
 
-    return f_unlink (dirname);
+    return f_unlink(dirname);
 }
 
 void* ifs::opendir(const char *dirname)
@@ -210,22 +212,26 @@ void* ifs::opendir(const char *dirname)
     return dir_cb;
 }
 
-int ifs::readdir(void *dir_cb,char** entry_name)
+int ifs::readdir(void *dir_cb,char** entry_name,int* size,int* type)
 {
     FRESULT res;
     FILINFO fno;
     printf("<===%s===>\n", __func__);
 
     res = f_readdir((DIR*)dir_cb, &fno);
-    if ((res != FR_OK) || (fno.fname[0] == 0))
+    if (res != FR_OK)
     {
         *entry_name = NULL;
+        *size = 0;
+        *type = 0;
         return res;
     }
    else
     {
        *entry_name = (char*)malloc(strlen(fno.fname) + 1);
        strcpy(*entry_name,fno.fname);
+       *size = fno.fsize;
+       *type = fno.fattrib;
     }
 
     return res;

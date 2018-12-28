@@ -70,9 +70,9 @@ class pyifs():
         dirObject = self.opendir(dirname)
         dirList = []
         if (dirObject):
-            res = (0,'')
-            while(res[0]==0):
+            res = (0,'1')
+            while((res[0]==0) and (len(res[1]) > 0)):
                 res = self.readdir(dirObject)
-                if(res[0]==0):
-                    dirList.append(res[1])
+                if((res[0]==0) and (len(res[1]) > 0)):
+                    dirList.append(res[1:])
         return dirList
