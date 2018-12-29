@@ -1,6 +1,7 @@
 import pyifs
 
 device = pyifs.pyifs("1:")
+device2 = pyifs.pyifs("1:")
 
 file1 = device.open("1:/main.c","r")
 print(">>>file1:",file1)

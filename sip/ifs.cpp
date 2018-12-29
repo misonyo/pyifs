@@ -2,10 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include "ffconf.h"
 
 ifs::ifs(const char* ldn)
 {
     FRESULT res;
+    int index;
+    char path[8];
     printf("<===%s===>\n", __func__);
 
     drive_num = ldn;
@@ -17,7 +20,15 @@ ifs::ifs(const char* ldn)
     }
     else
     {
-        res = f_mount(fs_cb, drive_num, 0);
+        for(index = 0;index <= FF_VOLUMES;index ++)
+        {
+            if(dev_name_table[index] == NULL)
+            {
+                break;
+            }
+        }
+        snprintf(path, sizeof(path),"%d:", index);
+        res = f_mount(fs_cb, path, 0);
         if (res != FR_OK)
         {
             printf("mount %s failed,return value is:%d!\n",drive_num,res);
@@ -25,7 +36,10 @@ ifs::ifs(const char* ldn)
         }
         else
         {
-            printf("mount %s succeed!\n",drive_num);
+            drive_name = (char*)malloc(MAX_DEVICE_NAME_LEN);
+            strcpy(drive_name,ldn);
+            dev_name_table[index] = drive_name;
+        	printf("mount %s succeed!\n",drive_num);
         }
     }
 }
@@ -45,6 +59,7 @@ ifs::~ifs()
     }
 
     free(fs_cb);
+    free(drive_name);
 }
 
 void* ifs::open(const char *filename, const char *opentype)

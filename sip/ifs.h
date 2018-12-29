@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include "ff.h"
 
+#define MAX_DEVICE_NAME_LEN 16
+char* dev_name_table[FF_VOLUMES];
+
 class ifs
 {
 public:
@@ -24,8 +27,8 @@ public:
     int rename(const char *old_name,const char *new_name);
 
 private:
-    const char* drive_num;
     FATFS* fs_cb;
+    char* drive_name;
 };
 #endif
 

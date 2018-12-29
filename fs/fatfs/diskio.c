@@ -3,17 +3,18 @@
 #include <time.h>
 #include <math.h>
 #include "diskio.h"
+#include "ifs.h"
+
 
 DSTATUS disk_initialize (BYTE pdrv)
 {
     FILE *fp = NULL;
-    char dir[10];
+    char* device_name;
     printf("<===%s===>\n", __func__);
     printf(">>>>>pdrv:%d\n",pdrv);
 
-    snprintf(dir, 10,"sd%d.bin", pdrv);
-
-    fp = fopen(dir, "rb+");
+    device_name = dev_name_table[pdrv];
+    fp = fopen(device_name, "rb+");
     if(!fp)
     {
         printf("%s fopen failed!\n",__func__);
@@ -27,12 +28,13 @@ DSTATUS disk_initialize (BYTE pdrv)
 DSTATUS disk_status (BYTE pdrv)
 {
     FILE *fp = NULL;
-    char dir[10];
+    char* device_name;
     printf("<===%s===>\n", __func__);
+    printf(">>>>>pdrv:%d\n",pdrv);
 
-    snprintf(dir, 10,"sd%d.bin", pdrv);
+    device_name = dev_name_table[pdrv];
 
-    fp = fopen(dir, "rb");
+    fp = fopen(device_name, "rb");
     if(!fp)
     {
         printf("%s fopen failed!",__func__);
@@ -46,12 +48,13 @@ DSTATUS disk_status (BYTE pdrv)
 DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
 {
     FILE *fp = NULL;
-    char dir[10];
+    char* device_name;
     printf("<===%s===>\n", __func__);
+    printf(">>>>>pdrv:%d\n",pdrv);
 
-    snprintf(dir, 10,"sd%d.bin", pdrv);
+    device_name = dev_name_table[pdrv];
 
-    fp = fopen(dir, "rb");
+    fp = fopen(device_name, "rb");
     if(!fp)
     {
         printf("%s fopen failed!",__func__);
@@ -66,12 +69,13 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 {
     FILE *fp = NULL;
-    char dir[10];
+    char* device_name;
     printf("<===%s===>\n", __func__);
+    printf(">>>>>pdrv:%d\n",pdrv);
 
-    snprintf(dir, 10,"sd%d.bin", pdrv);
+    device_name = dev_name_table[pdrv];
 
-    fp = fopen(dir, "rb+");
+    fp = fopen(device_name, "rb+");
     if(!fp)
     {
         printf("%s fopen failed!",__func__);
@@ -85,14 +89,15 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 }
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {
-    FILE *fp = NULL;
-    char dir[10];
     DRESULT res;
+    FILE *fp = NULL;
+    char* device_name;
     printf("<===%s===>\n", __func__);
+    printf(">>>>>pdrv:%d\n",pdrv);
 
-    snprintf(dir, 10,"sd%d.bin", pdrv);
+    device_name = dev_name_table[pdrv];
 
-    fp = fopen(dir, "rb+");
+    fp = fopen(device_name, "rb+");
     if(!fp)
     {
         printf("%s fopen failed!",__func__);
