@@ -4,15 +4,18 @@
 #include <stdint.h>
 #include "ffconf.h"
 
-ifs::ifs(const char* ldn)
+
+#define MAX_DEVICE_NAME_LEN 16
+extern "C" char* dev_name_table[FF_VOLUMES];
+
+
+ifs::ifs(const char* img_name)
 {
     FRESULT res;
     int index;
-    char path[8];
+
     printf("<===%s===>\n", __func__);
 
-    drive_num = ldn;
-    printf(">>>>>>>[ldn]%s\n",ldn);
     fs_cb = (FATFS*)malloc(sizeof (FATFS));
     if(fs_cb == NULL)
     {
@@ -31,15 +34,15 @@ ifs::ifs(const char* ldn)
         res = f_mount(fs_cb, path, 0);
         if (res != FR_OK)
         {
-            printf("mount %s failed,return value is:%d!\n",drive_num,res);
+            printf("mount %s failed,return value is:%d!\n",path,res);
             free(fs_cb);
         }
         else
         {
             drive_name = (char*)malloc(MAX_DEVICE_NAME_LEN);
-            strcpy(drive_name,ldn);
+            strcpy(drive_name,img_name);
             dev_name_table[index] = drive_name;
-        	printf("mount %s succeed!\n",drive_num);
+        	printf("mount %s succeed!\n",path);
         }
     }
 }
@@ -48,14 +51,14 @@ ifs::~ifs()
     FRESULT res;
     printf("<===%s===>\n", __func__);
 
-    res = f_unmount(drive_num);
+    res = f_unmount(path);
     if (res != FR_OK)
     {
-        printf("unmount %s failed,return value is:%d!\n",drive_num,res);
+        printf("unmount %s failed,return value is:%d!\n",path,res);
     }
     else
     {
-        printf("unmount %s succeed!\n",drive_num);
+        printf("unmount %s succeed!\n",path);
     }
 
     free(fs_cb);

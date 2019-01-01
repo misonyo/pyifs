@@ -3,8 +3,9 @@
 #include <time.h>
 #include <math.h>
 #include "diskio.h"
-#include "ifs.h"
+#include "ffconf.h"
 
+char* dev_name_table[FF_VOLUMES];
 
 DSTATUS disk_initialize (BYTE pdrv)
 {

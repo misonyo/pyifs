@@ -1,16 +1,13 @@
 #ifndef _IFS_H
 #define _IFS_H
 
-#include <stdio.h>
 #include "ff.h"
-
-#define MAX_DEVICE_NAME_LEN 16
-char* dev_name_table[FF_VOLUMES];
+#include <stdio.h>
 
 class ifs
 {
 public:
-    explicit ifs(const char* ldn);
+    explicit ifs(const char* img_name);
     ~ifs();
 
     void* open(const char *filename, const char *opentype);
@@ -29,6 +26,8 @@ public:
 private:
     FATFS* fs_cb;
     char* drive_name;
+    char path[8];
 };
+
 #endif
 

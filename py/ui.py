@@ -6,9 +6,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
 class TreeWidget(QTreeWidget):
-    def __init__(self):
+    def __init__(self,parent):
         super().__init__()
-
+        self.parent = parent
         self.setColumnCount(1)
         self.setHeaderLabels([''])
 
@@ -26,11 +26,16 @@ class TreeWidget(QTreeWidget):
     def ClickEvent(self):
         item=self.currentItem()
         print(item.text(0))
-        #pyifs = pyifs(ifs)
+        dir = self.parent.drive.path
+        entry = self.parent.drive.ls(dir)
+        print(">>>>>entry:",entry)
+        ls = ["00","11","22","33"]
+        self.parent.table.AddItems(ls)
 
 class TableWidget(QTableWidget):
-    def __init__(self):
+    def __init__(self,parent):
         super().__init__()
+        self.parent = parent;
         
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(['Name','Size','Type','Modified'])
@@ -38,18 +43,20 @@ class TableWidget(QTableWidget):
         
         self.clicked.connect(self.ClickEvent)
 
-    def AddItem(self,label):
+    def AddItems(self,label):
+        write_row = self.rowCount()
+        self.setRowCount(self.rowCount()+1)
         name = QTableWidgetItem(label[0])
-        self.setItem(0,0,name)
+        self.setItem(write_row,0,name)
         
         size = QTableWidgetItem(label[1])
-        self.setItem(0,0,size)
+        self.setItem(write_row,1,size)
         
         type = QTableWidgetItem(label[2])
-        self.setItem(0,0,type)
+        self.setItem(write_row,2,type)
         
         modified = QTableWidgetItem(label[3])
-        self.setItem(0,0,modified)
+        self.setItem(write_row,3,modified)
 
     def ClickEvent(self):
         item=self.currentItem()
@@ -64,9 +71,10 @@ class MainWindow(QMainWindow):
 
     def OpenAction(self):
         path = QFileDialog.getOpenFileName(self,"Open File Dialog",'',"image files(*.bin)")
-        print(path)
+        print(">>>>>>path",path)
         self.tree.AddTopItem(os.path.basename(path[0]))
-        #self.tree.ClickEvent(path[0]))
+        print(">>>>>>path[0]",path[0])
+        self.drive = pyifs.pyifs(os.path.basename(path[0]))
 
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -86,8 +94,8 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(exitAction)
         fileMenu.addAction(openAction)
         
-        self.table = TableWidget()
-        self.tree = TreeWidget()
+        self.table = TableWidget(self)
+        self.tree = TreeWidget(self)
         
         splitter = QSplitter()
         splitter.addWidget(self.tree)

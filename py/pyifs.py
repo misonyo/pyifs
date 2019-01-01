@@ -2,49 +2,49 @@ import ifs
 import os
 
 class pyifs():
-
-    def __init__(self,ldn):
-        self.device = ifs.ifs(ldn.encode("utf-8"))
+    def __init__(self,img_name):
+        self.drive = ifs.ifs(img_name.encode("utf-8"))
+        self.path = self.drive.path
 
     def open(self,pathName,intFlag):
-        fileObject = self.device.open(pathName.encode("utf-8"),intFlag.encode("utf-8"))
+        fileObject = self.drive.open(pathName.encode("utf-8"),intFlag.encode("utf-8"))
         return fileObject
 
     def close(self,fileObject):
-        self.device.close(fileObject)
+        self.drive.close(fileObject)
 
     def read(self,fileObject,size):
-        data = self.device.read(fileObject,size)
+        data = self.drive.read(fileObject,size)
         return data
 
     def write(self,fileObject,data,size):
-        return self.device.write(fileObject,data,size)
+        return self.drive.write(fileObject,data,size)
 
     def flush(self,fileObject):
-        return self.device.flush(fileObject)
+        return self.drive.flush(fileObject)
 
     def seek(self,fileObject,offset,whence):
-        return self.device.seek(fileObject,offset,whence)
+        return self.drive.seek(fileObject,offset,whence)
 
     def tell(self,fileObject):
-        return self.device.tell(fileObject)
+        return self.drive.tell(fileObject)
 
     def mkdir(self,dirname):
-        return self.device.mkdir(dirname.encode("utf-8"))
+        return self.drive.mkdir(dirname.encode("utf-8"))
 
     def rmdir(self,dirname):
-        return self.device.rmdir(dirname.encode("utf-8"))
+        return self.drive.rmdir(dirname.encode("utf-8"))
 
     def opendir(self,dirname):
-        dirObject = self.device.opendir(dirname.encode("utf-8"))
+        dirObject = self.drive.opendir(dirname.encode("utf-8"))
         return dirObject
 
     def readdir(self,dirObject):
-        dir_entry = self.device.readdir(dirObject)
+        dir_entry = self.drive.readdir(dirObject)
         return dir_entry
 
     def rename(self,old_name,new_name):
-        self.device.rm(old_name.encode("utf-8"),new_name.encode("utf-8"))
+        self.drive.rm(old_name.encode("utf-8"),new_name.encode("utf-8"))
 
     def copyToIfs(self, f, t):
         ff = open(f,'rb')
