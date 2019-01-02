@@ -2,6 +2,7 @@
 import sys
 import os
 import pyifs
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
@@ -11,8 +12,6 @@ class TreeWidget(QTreeWidget):
         self.parent = parent
         self.setColumnCount(1)
         self.setHeaderLabels([''])
-
-        self.clicked.connect(self.ClickEvent)
         
     def AddTopItem(self,text):
         topLevelItem = QTreeWidgetItem()
@@ -25,38 +24,7 @@ class TreeWidget(QTreeWidget):
         subItem=QTreeWidgetItem(TopItem)
         subItem.setIcon(0,QIcon('../figures/dir.png'))
         subItem.setText(0,text)
-        
-    def ClickEvent(self):
-        LastTreeItem = None
-        TreeItem=self.currentItem()
-        print(TreeItem.text(0))
-        
-        dir = bytes.decode(self.parent.drive.path)
-        if (".") in TreeItem.text(0):
-            entry = self.parent.drive.ls(dir + "/")
-        else:
-            entry = self.parent.drive.ls(dir + "/" + TreeItem.text(0))
-        print(">>>>>entry",entry)
-        self.parent.table.RemoveAllRow()
-        for index in entry:
-            
-            name = bytes.decode(index[0])
-            if "." in name:
-                ls = name.split(".")
-                suffix = ls[1].upper() + " "
-            else:
-                suffix = ""
-                
-            size = str(index[1])
 
-            if (0x10 == index[2]):
-                type = "dir"
-                size = ""
-            else:
-                type = suffix + "file"
-
-            TableItem = [name,size,type]
-            self.parent.table.AddItems(TableItem)
         
 class TableWidget(QTableWidget):
     def __init__(self,parent):
@@ -66,8 +34,6 @@ class TableWidget(QTableWidget):
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(['Name','Size','Type','Modified'])
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        
-        self.clicked.connect(self.ClickEvent)
 
     def AddItems(self,label):
         write_row = self.rowCount()
@@ -109,36 +75,13 @@ class MainWindow(QMainWindow):
 
     def OpenAction(self):
         path = QFileDialog.getOpenFileName(self,"Open File Dialog",'',"image files(*.bin)")
-        TopItem = self.tree.AddTopItem(os.path.basename(path[0]))
+        self.TopItem = self.tree.AddTopItem(os.path.basename(path[0]))
         #print(">>>>>>path[0]",path[0])
         self.drive = pyifs.pyifs(path[0])
         
-        dir = bytes.decode(self.drive.path)
-
-        entry = self.drive.ls(dir + "/")
-        #print(">>>>>entry",entry)
-        for index in entry:
-            
-            name = bytes.decode(index[0])
-            if "." in name:
-                ls = name.split(".")
-                suffix = ls[1].upper() + " "
-            else:
-                suffix = ""
-                
-            size = str(index[1])
-
-            if (0x10 == index[2]):
-                type = "dir"
-                size = ""
-                self.tree.AddSubItem(TopItem,name)
-            else:
-                type = suffix + "file"
-
-            TableItem = [name,size,type]
-            self.table.AddItems(TableItem)
+        self.update(path[0],self.TopItem)
         
-        TopItem.setExpanded(True)
+        self.TopItem.setExpanded(True)
         
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -161,6 +104,7 @@ class MainWindow(QMainWindow):
         self.table = TableWidget(self)
         self.table.sortItems(0,Qt.AscendingOrder)
         self.tree = TreeWidget(self)
+        self.tree.itemClicked.connect(self.TreeClick)
         
         splitter = QSplitter()
         splitter.addWidget(self.tree)
@@ -170,6 +114,56 @@ class MainWindow(QMainWindow):
         self.setGeometry(800, 800, 800, 800)
         self.setWindowTitle('pyifs')
         self.show()
+
+    def update(self,dir_name,item):
+        
+        if (".") in dir_name:
+            entry = self.drive.ls(dir + "/")
+        else:
+            entry = self.drive.ls(dir + "/" + dir_name)
+        print(">>>>>entry",entry)
+        self.table.RemoveAllRow()
+        for index in entry:
+            name = bytes.decode(index[0])
+            if "." in name:
+                ls = name.split(".")
+                suffix = ls[1].upper() + " "
+            else:
+                suffix = ""
+                
+            size = str(index[1])
+
+            if (0x10 == index[2]):
+                type = "dir"
+                size = ""
+                self.tree.AddSubItem(item,name)
+            else:
+                type = suffix + "file"
+
+            TableItem = [name,size,type]
+            self.table.AddItems(TableItem)
+            
+    def TreeClick(self):
+        LastTreeItem = None
+        TreeItem=self.tree.currentItem()
+        print(">>>>>>TreeItem:",TreeItem)
+        print(">>>>>>TreeItem.text(0)",TreeItem.text(0))
+        dir = bytes.decode(self.drive.path) + "/"
+        index = TreeItem
+        name = ""
+        tempname = ""
+        path = ""
+        while self.TopItem != index:
+            item = index.parent
+            if self.TopItem == item:
+                name += item.text(0)
+                break
+            else:
+                tempname = "/" + index.text(0) + name
+            index = item
+        path = dir + name
+        self.update(TreeItem.text(0),TreeItem)
+        TreeItem.setExpanded(True)
 
 if __name__ == '__main__':
      
