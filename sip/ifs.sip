@@ -11,7 +11,7 @@ class ifs {
 %End
 
 public:
-    explicit ifs(const char* img_name);
+    explicit ifs(const char* driv_path);
     ~ifs();
 
     void* open(const char *filename, const char *opentype);
@@ -48,4 +48,5 @@ public:
     %End
     int rename(const char *old_name,const char *new_name);
 
+    char* get_path();
 };

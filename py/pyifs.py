@@ -2,9 +2,9 @@ import ifs
 import os
 
 class pyifs():
-    def __init__(self,img_name):
-        self.drive = ifs.ifs(img_name.encode("utf-8"))
-        self.path = self.drive.path
+    def __init__(self,driv_path):
+        self.drive = ifs.ifs(driv_path.encode("utf-8"))
+        self.path = self.drive.get_path()
 
     def open(self,pathName,intFlag):
         fileObject = self.drive.open(pathName.encode("utf-8"),intFlag.encode("utf-8"))

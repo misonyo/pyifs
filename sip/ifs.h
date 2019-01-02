@@ -7,7 +7,7 @@
 class ifs
 {
 public:
-    explicit ifs(const char* img_name);
+    explicit ifs(const char* driv_path);
     ~ifs();
 
     void* open(const char *filename, const char *opentype);
@@ -23,6 +23,7 @@ public:
     int readdir(void *dir_cb,char** entry_name,int* size,int* type);
     int rename(const char *old_name,const char *new_name);
 
+    char* get_path();
 private:
     FATFS* fs_cb;
     char* drive_name;

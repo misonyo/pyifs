@@ -5,11 +5,11 @@
 #include "ffconf.h"
 
 
-#define MAX_DEVICE_NAME_LEN 16
-extern "C" char* dev_name_table[FF_VOLUMES];
+#define MAX_DEVICE_NAME_LEN 64
+extern "C" char* driv_table[FF_VOLUMES];
 
 
-ifs::ifs(const char* img_name)
+ifs::ifs(const char* driv_path)
 {
     FRESULT res;
     int index;
@@ -25,7 +25,7 @@ ifs::ifs(const char* img_name)
     {
         for(index = 0;index <= FF_VOLUMES;index ++)
         {
-            if(dev_name_table[index] == NULL)
+            if(driv_table[index] == NULL)
             {
                 break;
             }
@@ -40,8 +40,8 @@ ifs::ifs(const char* img_name)
         else
         {
             drive_name = (char*)malloc(MAX_DEVICE_NAME_LEN);
-            strcpy(drive_name,img_name);
-            dev_name_table[index] = drive_name;
+            strcpy(drive_name,driv_path);
+            driv_table[index] = drive_name;
         	printf("mount %s succeed!\n",path);
         }
     }
@@ -249,7 +249,14 @@ int ifs::readdir(void *dir_cb,char** entry_name,int* size,int* type)
        *entry_name = (char*)malloc(strlen(fno.fname) + 1);
        strcpy(*entry_name,fno.fname);
        *size = fno.fsize;
-       *type = fno.fattrib;
+       if (fno.fattrib & AM_DIR)
+       {
+           *type = AM_DIR;
+       }
+       else
+       {
+           *type = 0;
+       }
     }
 
     return res;
@@ -266,4 +273,9 @@ int ifs::rename(const char *old_name,const char *new_name)
         printf("f_rename failed,return value is:%d!\n",res);
     }
     return res;
+}
+
+char* ifs::get_path()
+{
+    return path;
 }

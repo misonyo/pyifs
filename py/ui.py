@@ -18,20 +18,46 @@ class TreeWidget(QTreeWidget):
         topLevelItem = QTreeWidgetItem()
         self.addTopLevelItem(topLevelItem)
         topLevelItem.setText(0,text)
+        topLevelItem.setIcon(0,QIcon('../figures/dir.png'))
+        return topLevelItem
     
     def AddSubItem(self,TopItem,text):
         subItem=QTreeWidgetItem(TopItem)
+        subItem.setIcon(0,QIcon('../figures/dir.png'))
         subItem.setText(0,text)
         
     def ClickEvent(self):
-        item=self.currentItem()
-        print(item.text(0))
-        dir = self.parent.drive.path
-        entry = self.parent.drive.ls(dir)
-        print(">>>>>entry:",entry)
-        ls = ["00","11","22","33"]
-        self.parent.table.AddItems(ls)
+        LastTreeItem = None
+        TreeItem=self.currentItem()
+        print(TreeItem.text(0))
+        
+        dir = bytes.decode(self.parent.drive.path)
+        if (".") in TreeItem.text(0):
+            entry = self.parent.drive.ls(dir + "/")
+        else:
+            entry = self.parent.drive.ls(dir + "/" + TreeItem.text(0))
+        print(">>>>>entry",entry)
+        self.parent.table.RemoveAllRow()
+        for index in entry:
+            
+            name = bytes.decode(index[0])
+            if "." in name:
+                ls = name.split(".")
+                suffix = ls[1].upper() + " "
+            else:
+                suffix = ""
+                
+            size = str(index[1])
 
+            if (0x10 == index[2]):
+                type = "dir"
+                size = ""
+            else:
+                type = suffix + "file"
+
+            TableItem = [name,size,type]
+            self.parent.table.AddItems(TableItem)
+        
 class TableWidget(QTableWidget):
     def __init__(self,parent):
         super().__init__()
@@ -55,13 +81,25 @@ class TableWidget(QTableWidget):
         type = QTableWidgetItem(label[2])
         self.setItem(write_row,2,type)
         
-        modified = QTableWidgetItem(label[3])
-        self.setItem(write_row,3,modified)
+        if (label[2] == "dir"):
+            name.setIcon(QIcon('../figures/dir.png'))
+        else:
+            name.setIcon(QIcon('../figures/file.png'))
+
+#        modified = QTableWidgetItem(label[3])
+#        self.setItem(write_row,3,modified)
 
     def ClickEvent(self):
         item=self.currentItem()
 
-        
+    def RemoveAllRow(self):
+        row = self.rowCount()
+        print(">>>>row:",row)
+        row -= 1
+        while row >=0:
+            self.removeRow(row)
+            row -= 1
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -71,11 +109,37 @@ class MainWindow(QMainWindow):
 
     def OpenAction(self):
         path = QFileDialog.getOpenFileName(self,"Open File Dialog",'',"image files(*.bin)")
-        print(">>>>>>path",path)
-        self.tree.AddTopItem(os.path.basename(path[0]))
-        print(">>>>>>path[0]",path[0])
-        self.drive = pyifs.pyifs(os.path.basename(path[0]))
+        TopItem = self.tree.AddTopItem(os.path.basename(path[0]))
+        #print(">>>>>>path[0]",path[0])
+        self.drive = pyifs.pyifs(path[0])
+        
+        dir = bytes.decode(self.drive.path)
 
+        entry = self.drive.ls(dir + "/")
+        #print(">>>>>entry",entry)
+        for index in entry:
+            
+            name = bytes.decode(index[0])
+            if "." in name:
+                ls = name.split(".")
+                suffix = ls[1].upper() + " "
+            else:
+                suffix = ""
+                
+            size = str(index[1])
+
+            if (0x10 == index[2]):
+                type = "dir"
+                size = ""
+                self.tree.AddSubItem(TopItem,name)
+            else:
+                type = suffix + "file"
+
+            TableItem = [name,size,type]
+            self.table.AddItems(TableItem)
+        
+        TopItem.setExpanded(True)
+        
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -95,6 +159,7 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(openAction)
         
         self.table = TableWidget(self)
+        self.table.sortItems(0,Qt.AscendingOrder)
         self.tree = TreeWidget(self)
         
         splitter = QSplitter()
