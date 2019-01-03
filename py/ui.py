@@ -7,14 +7,15 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
 class TopItem(QTreeWidgetItem):
-    def __init__(self,text,path):
+    def __init__(self,text,path,parent):
         super().__init__()
         self.WinPath = path
         self.drive = pyifs.pyifs(path)
+        self.parent = parent
         self.setText(0,text)
         self.setIcon(0,QIcon('../figures/dir.png'))
         self.setExpanded(True)
-        print(">>>>>>self.parent:",self.parent)
+        print(">>>>>>topitem.parent:",self.parent)
 
 class ChildItem(QTreeWidgetItem):
     def __init__(self,text):
@@ -85,11 +86,11 @@ class MainWindow(QMainWindow):
         else:
             OpenFlag = False
         if OpenFlag == False:
-            item = TopItem(os.path.basename(path[0]),path[0])
+            item = TopItem(os.path.basename(path[0]),path[0],self.tree)
             self.TopItemList.append(item)
             print(">>>>>>self.TopItemList",self.TopItemList)
             self.tree.addTopLevelItem(item)
-            #self.LSRefresh(item)
+            self.LSRefresh(item)
         
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -124,23 +125,18 @@ class MainWindow(QMainWindow):
         self.show()
 
     def LSRefresh(self,item):
-        dir = bytes.decode(item.drive.path) + "/"
         index = item
         name = ""
-        tempname = ""
-        path = ""
-        while index.parent() == None:
-            item = index.parent
-            if self.TopItem == item:
-                name += item.text(0)
-                break
-            else:
-                tempname = "/" + index.text(0) + name
-            index = item
-        path = dir + name
+        preName = ""
+
+        while index.parent() != self.tree:
+            name = index.text(0) + "/" + preName
+            preName = name
+            print(">>>>>index.text(0)",index.text(0))
+            index = index.parent()
         
-        
-        entry = item.drive.ls(FSPath)
+        dir = bytes.decode(index.drive.path) + "/"
+        entry = item.drive.ls(dir + name)
         print(">>>>>entry",entry)
         self.table.RemoveAllRow()
         for index in entry:
