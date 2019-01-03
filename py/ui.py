@@ -6,26 +6,30 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
+class TopItem(QTreeWidgetItem):
+    def __init__(self,text,path):
+        super().__init__()
+        self.WinPath = path
+        self.drive = pyifs.pyifs(path)
+        self.setText(0,text)
+        self.setIcon(0,QIcon('../figures/dir.png'))
+        self.setExpanded(True)
+        print(">>>>>>self.parent:",self.parent)
+
+class ChildItem(QTreeWidgetItem):
+    def __init__(self,text):
+        super().__init__()
+        self.setText(0,text)
+        self.setIcon(0,QIcon('../figures/dir.png'))
+        self.setExpanded(True)
+        
 class TreeWidget(QTreeWidget):
     def __init__(self,parent):
         super().__init__()
         self.parent = parent
         self.setColumnCount(1)
         self.setHeaderLabels([''])
-        
-    def AddTopItem(self,text):
-        topLevelItem = QTreeWidgetItem()
-        self.addTopLevelItem(topLevelItem)
-        topLevelItem.setText(0,text)
-        topLevelItem.setIcon(0,QIcon('../figures/dir.png'))
-        return topLevelItem
-    
-    def AddSubItem(self,TopItem,text):
-        subItem=QTreeWidgetItem(TopItem)
-        subItem.setIcon(0,QIcon('../figures/dir.png'))
-        subItem.setText(0,text)
 
-        
 class TableWidget(QTableWidget):
     def __init__(self,parent):
         super().__init__()
@@ -55,9 +59,6 @@ class TableWidget(QTableWidget):
 #        modified = QTableWidgetItem(label[3])
 #        self.setItem(write_row,3,modified)
 
-    def ClickEvent(self):
-        item=self.currentItem()
-
     def RemoveAllRow(self):
         row = self.rowCount()
         print(">>>>row:",row)
@@ -72,16 +73,23 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.initUI()
+        self.TopItemList = []
 
     def OpenAction(self):
         path = QFileDialog.getOpenFileName(self,"Open File Dialog",'',"image files(*.bin)")
-        self.TopItem = self.tree.AddTopItem(os.path.basename(path[0]))
-        #print(">>>>>>path[0]",path[0])
-        self.drive = pyifs.pyifs(path[0])
         
-        self.update(path[0],self.TopItem)
-        
-        self.TopItem.setExpanded(True)
+        for index in self.TopItemList:
+            if index.path == path[0]:
+                OpenFlag = True
+                break
+        else:
+            OpenFlag = False
+        if OpenFlag == False:
+            item = TopItem(os.path.basename(path[0]),path[0])
+            self.TopItemList.append(item)
+            print(">>>>>>self.TopItemList",self.TopItemList)
+            self.tree.addTopLevelItem(item)
+            #self.LSRefresh(item)
         
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -115,12 +123,24 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('pyifs')
         self.show()
 
-    def update(self,dir_name,item):
+    def LSRefresh(self,item):
+        dir = bytes.decode(item.drive.path) + "/"
+        index = item
+        name = ""
+        tempname = ""
+        path = ""
+        while index.parent() == None:
+            item = index.parent
+            if self.TopItem == item:
+                name += item.text(0)
+                break
+            else:
+                tempname = "/" + index.text(0) + name
+            index = item
+        path = dir + name
         
-        if (".") in dir_name:
-            entry = self.drive.ls(dir + "/")
-        else:
-            entry = self.drive.ls(dir + "/" + dir_name)
+        
+        entry = item.drive.ls(FSPath)
         print(">>>>>entry",entry)
         self.table.RemoveAllRow()
         for index in entry:
@@ -136,12 +156,12 @@ class MainWindow(QMainWindow):
             if (0x10 == index[2]):
                 type = "dir"
                 size = ""
-                self.tree.AddSubItem(item,name)
+                item.addChild(ChildItem(name))
             else:
                 type = suffix + "file"
 
-            TableItem = [name,size,type]
-            self.table.AddItems(TableItem)
+            TableItemAttr = [name,size,type]
+            self.table.AddItems(TableItemAttr)
             
     def TreeClick(self):
         LastTreeItem = None
@@ -162,7 +182,7 @@ class MainWindow(QMainWindow):
                 tempname = "/" + index.text(0) + name
             index = item
         path = dir + name
-        self.update(TreeItem.text(0),TreeItem)
+        self.refresh(TreeItem.text(0),TreeItem)
         TreeItem.setExpanded(True)
 
 if __name__ == '__main__':
