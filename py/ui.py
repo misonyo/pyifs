@@ -5,22 +5,22 @@ import pyifs
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
+#from bitarray._bitarray import length
 
 class TopItem(QTreeWidgetItem):
-    def __init__(self,text,path,parent):
+    def __init__(self,path):
         super().__init__()
         self.WinPath = path
         self.drive = pyifs.pyifs(path)
-        self.parent = parent
-        self.setText(0,text)
+        self.setText(0,os.path.basename(path))
+        self.setText(1,"TopItem")
         self.setIcon(0,QIcon('../figures/dir.png'))
-        self.setExpanded(True)
-        print(">>>>>>topitem.parent:",self.parent)
-
+    
 class ChildItem(QTreeWidgetItem):
     def __init__(self,text):
         super().__init__()
         self.setText(0,text)
+        self.setText(1,"ChildItem")
         self.setIcon(0,QIcon('../figures/dir.png'))
         self.setExpanded(True)
         
@@ -80,17 +80,21 @@ class MainWindow(QMainWindow):
         path = QFileDialog.getOpenFileName(self,"Open File Dialog",'',"image files(*.bin)")
         
         for index in self.TopItemList:
-            if index.path == path[0]:
+            if index.WinPath == path[0]:
                 OpenFlag = True
                 break
         else:
             OpenFlag = False
+
         if OpenFlag == False:
-            item = TopItem(os.path.basename(path[0]),path[0],self.tree)
+            item = TopItem(path[0])
             self.TopItemList.append(item)
+            print(">>>>>>topitem",item)
+            print(">>>>>>>self.tree",self.tree)
             print(">>>>>>self.TopItemList",self.TopItemList)
             self.tree.addTopLevelItem(item)
             self.LSRefresh(item)
+            item.setExpanded(True)
         
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -129,30 +133,36 @@ class MainWindow(QMainWindow):
         name = ""
         preName = ""
 
-        while index.parent() != self.tree:
+        while index.text(1) == "ChildItem":
             name = index.text(0) + "/" + preName
             preName = name
             print(">>>>>index.text(0)",index.text(0))
             index = index.parent()
-        
+        NameLen = len(name)
+        if NameLen != 0:
+            name = name[0:NameLen - 1]
         dir = bytes.decode(index.drive.path) + "/"
-        entry = item.drive.ls(dir + name)
-        print(">>>>>entry",entry)
+        print(">>>>>dir + name",(dir + name))
+        entrys = index.drive.ls(dir + name)
+        print(">>>>>entrys",entrys)
         self.table.RemoveAllRow()
-        for index in entry:
-            name = bytes.decode(index[0])
+        
+        count = item.childCount()
+        for var in entrys:
+            name = bytes.decode(var[0])
             if "." in name:
                 ls = name.split(".")
                 suffix = ls[1].upper() + " "
             else:
                 suffix = ""
                 
-            size = str(index[1])
+            size = str(var[1])
 
-            if (0x10 == index[2]):
+            if (0x10 == var[2]):
                 type = "dir"
                 size = ""
-                item.addChild(ChildItem(name))
+                if count == 0:
+                    item.addChild(ChildItem(name))
             else:
                 type = suffix + "file"
 
@@ -160,26 +170,11 @@ class MainWindow(QMainWindow):
             self.table.AddItems(TableItemAttr)
             
     def TreeClick(self):
-        LastTreeItem = None
-        TreeItem=self.tree.currentItem()
-        print(">>>>>>TreeItem:",TreeItem)
-        print(">>>>>>TreeItem.text(0)",TreeItem.text(0))
-        dir = bytes.decode(self.drive.path) + "/"
-        index = TreeItem
-        name = ""
-        tempname = ""
-        path = ""
-        while self.TopItem != index:
-            item = index.parent
-            if self.TopItem == item:
-                name += item.text(0)
-                break
-            else:
-                tempname = "/" + index.text(0) + name
-            index = item
-        path = dir + name
-        self.refresh(TreeItem.text(0),TreeItem)
-        TreeItem.setExpanded(True)
+        item = self.tree.currentItem()
+        print("-------------------------------treeclick------------------")
+        print(">>>>>>item.text(0)",item.text(0))
+        self.LSRefresh(item)
+        item.setExpanded(True)
 
 if __name__ == '__main__':
      
