@@ -39,6 +39,10 @@ class TableWidget(QTableWidget):
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(['Name','Size','Type','Modified'])
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.setShowGrid(False)
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        #self.sortItems(0,Qt.AscendingOrder)
 
     def AddItems(self,label):
         write_row = self.rowCount()
@@ -95,6 +99,7 @@ class MainWindow(QMainWindow):
             self.tree.addTopLevelItem(item)
             self.LSRefresh(item)
             item.setExpanded(True)
+            #self.table.sortItems(0,Qt.AscendingOrder)
         
     def initUI(self):
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -148,6 +153,9 @@ class MainWindow(QMainWindow):
         self.table.RemoveAllRow()
         
         count = item.childCount()
+        DirList = []
+        FileList = []
+        
         for var in entrys:
             name = bytes.decode(var[0])
             if "." in name:
@@ -155,7 +163,6 @@ class MainWindow(QMainWindow):
                 suffix = ls[1].upper() + " "
             else:
                 suffix = ""
-                
             size = str(var[1])
 
             if (0x10 == var[2]):
@@ -165,9 +172,15 @@ class MainWindow(QMainWindow):
                     item.addChild(ChildItem(name))
             else:
                 type = suffix + "file"
-
             TableItemAttr = [name,size,type]
-            self.table.AddItems(TableItemAttr)
+            if type == "dir":
+                DirList.append(TableItemAttr)
+            else:
+                FileList.append(TableItemAttr)
+        for list in DirList:
+            self.table.AddItems(list)
+        for list in FileList:
+            self.table.AddItems(list)
             
     def TreeClick(self):
         item = self.tree.currentItem()
@@ -175,6 +188,10 @@ class MainWindow(QMainWindow):
         print(">>>>>>item.text(0)",item.text(0))
         self.LSRefresh(item)
         item.setExpanded(True)
+        #self.table.sortItems(0,Qt.AscendingOrder)
+    
+    def NameSort(self):
+        pass
 
 if __name__ == '__main__':
      
