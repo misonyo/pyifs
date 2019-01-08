@@ -230,7 +230,7 @@ void* ifs::opendir(const char *dirname)
     return dir_cb;
 }
 
-int ifs::readdir(void *dir_cb,char** entry_name,int* size,int* type)
+int ifs::readdir(void *dir_cb,char** entry_name,int* size,int* type,int* date,int* time)
 {
     FRESULT res;
     FILINFO fno;
@@ -249,6 +249,8 @@ int ifs::readdir(void *dir_cb,char** entry_name,int* size,int* type)
        *entry_name = (char*)malloc(strlen(fno.fname) + 1);
        strcpy(*entry_name,fno.fname);
        *size = fno.fsize;
+       *date = fno.fdate;
+       *time = fno.ftime;
        if (fno.fattrib & AM_DIR)
        {
            *type = AM_DIR;

@@ -30,16 +30,16 @@ public:
     int mkdir(const char *dirname);
     int rmdir(const char *dirname);
     void* opendir(const char *dirname);
-    int readdir(void *dir_cb,char** entry_name /Out/,int* size /Out/,int* type /Out/);
+    int readdir(void *dir_cb,char** entry_name /Out/,int* size /Out/,int* type /Out/,int* date /Out/,int* time /Out/);
     %MethodCode
         SIP_SSIZE_T length = 0;
-        sipRes = sipCpp->readdir(a0,&a1,&a2,&a3);
+        sipRes = sipCpp->readdir(a0,&a1,&a2,&a3,&a4,&a5);
 
         if (a1 != NULL)
         {
             length = strlen(a1);
         }
-        PyObject * obj = sipBuildResult(0,"(igii)",sipRes, a1, length, a2, a3);
+        PyObject * obj = sipBuildResult(0,"(igiiii)",sipRes, a1, length, a2, a3,a4,a5);
         if (a1 != NULL)
         {
             free(a1);
