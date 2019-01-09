@@ -7,11 +7,13 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
 class tableNameItem(QTableWidgetItem):
-    def __init__(self,text,imgPath):
+    def __init__(self,text,imgPath,topTreeItem):
         super().__init__()
         
         self.setText(text)
         self.imgPath = imgPath
+        self.topTreeItem = topTreeItem
+        self.attr = "tableItem"
 
         
 class TreeTopItem(QTreeWidgetItem):
@@ -20,15 +22,19 @@ class TreeTopItem(QTreeWidgetItem):
 
         self.drive = pyifs.pyifs(path)
         self.winPath = path
-        self.imgPath = bytes.decode(self.drive.path) + "/"
+        self.topTreeItem = self
+        self.imgPath = bytes.decode(self.drive.path)
+        self.attr = "TreeItem"
         self.setText(0,os.path.basename(path))
         self.setText(1,"TreeTopItem")
         self.setIcon(0,QIcon('../figures/dir.png'))
     
 class TreeChildItem(QTreeWidgetItem):
-    def __init__(self,text,imgPath):
+    def __init__(self,text,imgPath,topTreeItem):
         super().__init__()
         self.imgPath = imgPath
+        self.topTreeItem = topTreeItem
+        self.attr = "TreeItem"
         self.setText(0,text)
         self.setText(1,"TreeChildItem")
         self.setIcon(0,QIcon('../figures/dir.png'))
@@ -98,7 +104,7 @@ class TableWidget(QTableWidget):
         for index in tableList:
             write_row = self.rowCount()
             self.setRowCount(self.rowCount()+1)
-            name = tableNameItem(index[0],index[3])
+            name = tableNameItem(index[0],index[3],index[4])
             self.setItem(write_row,0,name)
             
             size = QTableWidgetItem(index[1])
@@ -156,31 +162,6 @@ class TableWidget(QTableWidget):
             self.sortDir = False
         self.addTableItems()
         
-    def refreshTable(self,entrys,dir):
-        self.clearAllList()
-
-        for var in entrys:
-            name = bytes.decode(var[0])
-            if "." in name:
-                ls = name.split(".")
-                suffix = ls[1].upper() + " "
-            else:
-                suffix = ""
-            size = str(var[1])
-
-            if (0x10 == var[2]):
-                type = "dir"
-                size = ""
-            else:
-                type = suffix + "file"
-            imgPath = dir + name
-            TableItemAttr = [name,size,type,imgPath]
-            if type == "dir":
-                self.dirList.append(TableItemAttr)
-            else:
-                self.fileList.append(TableItemAttr)
-
-        self.nameOrTypeSort(0,False)
         
 class MainWindow(QMainWindow):
 
@@ -238,38 +219,61 @@ class MainWindow(QMainWindow):
             self.tree.addTopLevelItem(item)
 
             self.tree.setCurrentItem(item)
-            entrys = item.drive.ls(item.imgPath)
-            print(">>>>entrys:",entrys)
+            self.refreshTable(item)
+            #self.tree.refreshTree(self.table.dirList)
             item.setExpanded(True)
-            self.table.refreshTable(entrys,item.imgPath)
-            self.tree.refreshTree(self.table.dirList)
-            TreeItem = self.tree.currentItem()
-            print(">>>>>>>>>>>openAction>>>self.tree.currentItem():",TreeItem)
-            if TreeItem!= None:
-                print(">>>>>>TreeItem.text()",TreeItem.text(0))
         
     def onTreeItemClicked(self):
         item = self.tree.currentItem()
-        print(">>>>>>>>>>>onTreeItemClick>>>>self.tree.currentItem():",item)
-        #result = self.tree.getTreeItemDir(item)
-        #print(">>>>>onTreeItemClicked>>>>topitem",result[0])
-        #print(">>>>>onTreeItemClicked>>>>TreeItemDir",result[1])
-        dir = item.imgPath[0:3]
-        for topItem in self.TopItemList:
-            if dir == topItem.imgPath:
-                break;
-        entrys = topItem.drive.ls(item.imgPath)
-        self.table.refreshTable(entrys,item.imgPath)
-        self.tree.refreshTree(self.table.dirList)
+        self.refreshTable(item)
+        #self.tree.refreshTree(self.table.dirList)
         item.setExpanded(True)
 
     def onTableCellDoubleClicked(self,row,column):
-        item = self.tree.currentItem()
-        print(">>>>>>>>>>>onTableCellDoubleClicked>>>>self.tree.currentItem():",item)
+        treeItem = self.tree.currentItem()
+        print(">>>>>>>>>>>onTableCellDoubleClicked>>>>self.tree.currentItem():",treeItem)
         print(">>>>>>>>row:",row)
         print(">>>>>>>>column:",column)
         item = self.table.item(row,column)
         print(">>>>>item.text():",item.text())
+
+    def refreshTable(self,item):
+        self.table.clearAllList()
+        
+        topItem = item.topTreeItem
+        entrys = topItem.drive.ls(item.imgPath)
+        print(">>>>entrys:",entrys)
+        count = item.childCount()
+        for var in entrys:
+            name = bytes.decode(var[0])
+            imgPath = item.imgPath + "/" + name
+            print(">>>>>>>imgPath",imgPath)
+            if "." in name:
+                ls = name.split(".")
+                suffix = ls[1].upper() + " "
+            else:
+                suffix = ""
+            size = str(var[1])
+
+            if (0x10 == var[2]):
+                type = "dir"
+                size = ""
+                if (count == 0) and (item.attr == "TreeItem"):
+                    item.addChild(TreeChildItem(name,imgPath,topItem))
+            else:
+                type = suffix + "file"
+
+            TableItemAttr = [name,size,type,imgPath,topItem]
+            if type == "dir":
+                self.table.dirList.append(TableItemAttr)
+            else:
+                self.table.fileList.append(TableItemAttr)
+#         for index in self.table.dirList:
+#             print(index)
+#         for index in self.table.fileList:
+#             print(index)
+        self.table.nameOrTypeSort(0,False)
+
 
 if __name__ == '__main__':
      
