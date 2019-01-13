@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import sys
 import os
+import subprocess
 import pyifs
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -15,7 +16,6 @@ class tableNameItem(QTableWidgetItem):
         self.topTreeItem = topTreeItem
         self.attr = "tableItem"
 
-        
 class TreeTopItem(QTreeWidgetItem):
     def __init__(self,path):
         super().__init__()
@@ -46,32 +46,6 @@ class TreeWidget(QTreeWidget):
         self.parent = parent
         self.setColumnCount(1)
         self.setHeaderLabels([''])
-    
-    def getTreeItemDir(self,item):
-        index = item
-        name = ""
-        preName = ""
-
-        while index.text(1) == "TreeChildItem":
-            name = index.text(0) + "/" + preName
-            preName = name
-            print(">>>>>index.text(0)",index.text(0))
-            index = index.parent()
-        NameLen = len(name)
-        if NameLen != 0:
-            name = name[0:NameLen - 1]
-        topItem = index
-        dir = topItem.imgPath + name
-        
-        return topItem,dir
-    
-    def refreshTree(self,dirList):
-        item = self.currentItem()
-        
-        count = item.childCount()
-        if count == 0:
-            for index in dirList:
-                item.addChild(TreeChildItem(index[0],index[3]))
         
 class TableWidget(QTableWidget):
     def __init__(self,parent):
@@ -92,7 +66,7 @@ class TableWidget(QTableWidget):
         self.setShowGrid(False)
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
-        self.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def clearAllList(self):
         self.fileList = []
@@ -168,26 +142,28 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.setGeometry(400, 150, 1200, 800)
+        self.setWindowTitle('pyifs')
+        self.setWindowIcon(QIcon('../figures/filem.png'))
+        self.statusBar().showMessage('Reday')
         self.initUI()
         self.TopItemList = []
-
+        
+        self.show()
     def initUI(self):
-        exitAction = QAction(QIcon('exit.png'), '&Exit', self)
+        exitAction = QAction(QIcon('../figures/exit.png'), '&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(qApp.quit)
  
-        openAction = QAction(QIcon('open.png'), '&Open', self)
+        openAction = QAction(QIcon('../figures/open.png'), '&Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open image')
         openAction.triggered.connect(self.openAction)
  
-        self.statusBar()
- 
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(exitAction)
-        fileMenu.addAction(openAction)
+        self.toolbar = self.addToolBar('Exit123')
+        self.toolbar.addAction(exitAction)
+        self.toolbar.addAction(openAction)
         
         self.table = TableWidget(self)
         self.tree = TreeWidget(self)
@@ -197,53 +173,74 @@ class MainWindow(QMainWindow):
         splitter = QSplitter()
         splitter.addWidget(self.tree)
         splitter.addWidget(self.table)
+        splitter.setStretchFactor(0,4)
+        splitter.setStretchFactor(1,6)
 
         self.setCentralWidget(splitter)
-        self.setGeometry(800, 800, 800, 800)
-        self.setWindowTitle('pyifs')
-        self.show()
 
     def openAction(self):
         path = QFileDialog.getOpenFileName(self,"Open File Dialog",'',"image files(*.bin)")
-        
-        for index in self.TopItemList:
-            if index.winPath == path[0]:
-                OpenFlag = True
-                break
-        else:
-            OpenFlag = False
-
-        if OpenFlag == False:
-            item = TreeTopItem(path[0])
-            self.TopItemList.append(item)
-            self.tree.addTopLevelItem(item)
-
-            self.tree.setCurrentItem(item)
-            self.refreshTable(item)
-            #self.tree.refreshTree(self.table.dirList)
-            item.setExpanded(True)
+        print(">>>>>>>path",path)
+        if len(path[0]) > 0:
+            for index in self.TopItemList:
+                if index.winPath == path[0]:
+                    OpenFlag = True
+                    break
+            else:
+                OpenFlag = False
+    
+            if OpenFlag == False:
+                item = TreeTopItem(path[0])
+                self.TopItemList.append(item)
+                self.tree.addTopLevelItem(item)
+    
+                self.tree.setCurrentItem(item)
+                self.refreshTable(item)
+                item.setExpanded(True)
         
     def onTreeItemClicked(self):
         item = self.tree.currentItem()
         self.refreshTable(item)
-        #self.tree.refreshTree(self.table.dirList)
         item.setExpanded(True)
 
     def onTableCellDoubleClicked(self,row,column):
         treeItem = self.tree.currentItem()
-        print(">>>>>>>>>>>onTableCellDoubleClicked>>>>self.tree.currentItem():",treeItem)
-        print(">>>>>>>>row:",row)
-        print(">>>>>>>>column:",column)
-        item = self.table.item(row,column)
-        print(">>>>>item.text():",item.text())
+        print(">>>>>>>>>>>onTableCellDoubleClicked>>>>self.tree.currentItem():",treeItem.text(0))
+        nameItem = self.table.item(row,0)
+        print(">>>>>nameItem.text():",nameItem.text())
+        sizeItem = self.table.item(row,1)
+        typeItem = self.table.item(row,2)
+        print(">>>>>>>>>>typeItem.text()",typeItem.text())
+        if "dir" in typeItem.text():
+            self.refreshTable(nameItem)
+        else:
+            path = QFileDialog.getSaveFileName(self,"save File Dialog",nameItem.text(),"All Files (*)")
+            print(">>>>>>>>>path",path)
+            if len(path[0]) > 0:
+                with open(path[0],'wb') as file:
+                    topItem = nameItem.topTreeItem
+                    imgFile = topItem.drive.open(nameItem.imgPath,"r")
+                    data = topItem.drive.read(imgFile,int(sizeItem.text()))
+                    topItem.drive.close(imgFile)
+                    file.write(data[1])
+                if os.path.exists(r"C:/Program Files (x86)/Notepad++"):
+                    cmd = "C:/Program Files (x86)/Notepad++/notepad++.exe " + path[0]
+                    print(">>>>>>cmd",cmd)
+                    subprocess.Popen(cmd)
+                else:
+                    subprocess.Popen("notepad " + path[0])
 
     def refreshTable(self,item):
         self.table.clearAllList()
         
         topItem = item.topTreeItem
+        print(">>>>>>>>item.imgPath",item.imgPath)
         entrys = topItem.drive.ls(item.imgPath)
         print(">>>>entrys:",entrys)
-        count = item.childCount()
+        if item.attr == "TreeItem":
+            count = item.childCount()
+        else:
+            count = True
         for var in entrys:
             name = bytes.decode(var[0])
             imgPath = item.imgPath + "/" + name
@@ -258,7 +255,7 @@ class MainWindow(QMainWindow):
             if (0x10 == var[2]):
                 type = "dir"
                 size = ""
-                if (count == 0) and (item.attr == "TreeItem"):
+                if (count == False) and (item.attr == "TreeItem"):
                     item.addChild(TreeChildItem(name,imgPath,topItem))
             else:
                 type = suffix + "file"
@@ -268,12 +265,8 @@ class MainWindow(QMainWindow):
                 self.table.dirList.append(TableItemAttr)
             else:
                 self.table.fileList.append(TableItemAttr)
-#         for index in self.table.dirList:
-#             print(index)
-#         for index in self.table.fileList:
-#             print(index)
-        self.table.nameOrTypeSort(0,False)
 
+        self.table.nameOrTypeSort(0,False)
 
 if __name__ == '__main__':
      
